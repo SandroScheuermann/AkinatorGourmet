@@ -20,19 +20,18 @@ boloNode.ParentNode = massaNode;
 
 while (true)
 {
-    Console.Clear();
     Console.WriteLine("Bem-vindo ao Akinator Gourmet!");
     Console.WriteLine("Pense em um prato.\n");
 
     MysteriousObject? deductedObject = new();
 
-    deductedObject = FindFood(massaNode);
+    deductedObject = FindObject(massaNode);
 
     if (deductedObject is not null)
     {
         Console.Clear();
 
-        Console.WriteLine($"Acertei! a comida que você pensou é {deductedObject.Name}\n");
+        Console.WriteLine($"\nAcertei! a comida que você pensou é {deductedObject.Name}\n");
     }
 }
 
@@ -42,11 +41,11 @@ void UpdateTree(MysteriousObject lastNode)
 
     Console.WriteLine($"Desisto! Qual a foi a comida que você pensou?");
 
-    var thinkedFood = Console.ReadLine();
+    var thoughtFood = Console.ReadLine();
 
-    MysteriousObject deductedObject = new() { Name = thinkedFood };
+    MysteriousObject deductedObject = new() { Name = thoughtFood };
 
-    Console.WriteLine($"O que a {thinkedFood} é, que {lastNode.Name} não é ?");
+    Console.WriteLine($"O que a {thoughtFood} é, que {lastNode.Name} não é ?");
 
     var unmappedAspect = Console.ReadLine();
 
@@ -56,13 +55,16 @@ void UpdateTree(MysteriousObject lastNode)
         ParentNode = lastNode.ParentNode
     };
 
-    if (lastNode.ParentNode is not null && lastNode.ParentNode?.YesNode == lastNode)
+    if (lastNode.ParentNode is not null)
     {
-        lastNode.ParentNode.YesNode = aspect;
-    }
-    else if (lastNode.ParentNode is not null && lastNode.ParentNode.YesNode != lastNode)
-    {
-        lastNode.ParentNode.NoNode = aspect;
+        if (lastNode.IsLeftNode)
+        {
+            lastNode.ParentNode.NoNode = aspect;
+        }
+        else
+        {
+            lastNode.ParentNode.YesNode = aspect;
+        }
     }
 
     lastNode.ParentNode = aspect;
@@ -71,41 +73,30 @@ void UpdateTree(MysteriousObject lastNode)
     aspect.YesNode = deductedObject;
 }
 
-MysteriousObject? FindFood(MysteriousObject food)
+MysteriousObject? FindObject(MysteriousObject currentNode)
 {
-    Console.WriteLine(food.GetQuestionMessage());
+    Console.WriteLine(currentNode.GetQuestionMessage());
+    Console.WriteLine("1 - Sim\n2 - Não");
 
-    Console.WriteLine("1 - Sim\n" +
-                      "2 - Não");
+    var userInput = Console.ReadLine();
 
-    var result = Console.ReadLine() == "1";
+    bool result = userInput == "1";
 
-    if (result && food.YesNode is not null)
+    if (result && currentNode.YesNode != null)
     {
-        return FindFood(food.YesNode);
+        return FindObject(currentNode.YesNode);
     }
-    else if (result && food.YesNode is null)
+    else if (!result && currentNode.NoNode != null)
     {
-        return food;
+        return FindObject(currentNode.NoNode);
     }
-    else if (!result && food.NoNode is not null)
+    else if (result && currentNode.YesNode == null)
     {
-        return FindFood(food.NoNode);
+        return currentNode;
     }
-    else if (!result && food.NoNode is null)
+    else
     {
-        UpdateTree(food);
+        UpdateTree(currentNode);
         return null;
     }
-
-    return null;
-}
-
-MysteriousObject GetLastNode(MysteriousObject node)
-{
-    return node.NoNode switch
-    {
-        null => node,
-        _ => GetLastNode(node.NoNode)
-    };
 }

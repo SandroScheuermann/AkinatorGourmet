@@ -6,8 +6,7 @@
         public MysteriousObject? ParentNode { get; set; }
         public MysteriousObject? YesNode { get; set; }
         public MysteriousObject? NoNode { get; set; }
-        public string GetQuestionMessage() => $"Sua comida é {Name}?";
-
-
+        public bool IsLeftNode => ParentNode is not null && ParentNode.YesNode != this;
+        public string GetQuestionMessage() => $"Sua comida é {Name}?";  
     }
 }
