@@ -3,12 +3,10 @@
 var boloNode = new MysteriousObject
 {
     Name = "Bolo de Chocolate",
-    IsEndNode = true
 };
 var lasanhaNode = new MysteriousObject
 {
     Name = "Lasanha",
-    IsResponseNode = true
 };
 var massaNode = new MysteriousObject
 {
@@ -22,8 +20,9 @@ boloNode.ParentNode = massaNode;
 
 while (true)
 {
+    Console.Clear();
     Console.WriteLine("Bem-vindo ao Akinator Gourmet!");
-    Console.WriteLine("Pense em um prato.");
+    Console.WriteLine("Pense em um prato.\n");
 
     MysteriousObject? deductedObject = new();
 
@@ -33,7 +32,7 @@ while (true)
     {
         Console.Clear();
 
-        Console.WriteLine($"Acertei! a comida que você pensou é {deductedObject.Name}");
+        Console.WriteLine($"Acertei! a comida que você pensou é {deductedObject.Name}\n");
     }
 }
 
@@ -45,7 +44,7 @@ void UpdateTree(MysteriousObject lastNode)
 
     var thinkedFood = Console.ReadLine();
 
-    MysteriousObject deductedObject = new() { Name = thinkedFood, IsResponseNode = true };
+    MysteriousObject deductedObject = new() { Name = thinkedFood };
 
     Console.WriteLine($"O que a {thinkedFood} é, que {lastNode.Name} não é ?");
 
@@ -57,20 +56,19 @@ void UpdateTree(MysteriousObject lastNode)
         ParentNode = lastNode.ParentNode
     };
 
-    if (lastNode.IsEndNode && lastNode.ParentNode is not null)
-        lastNode.ParentNode.NoNode = aspect;
-
-    if (lastNode.IsResponseNode && lastNode.ParentNode is not null)
+    if (lastNode.ParentNode is not null && lastNode.ParentNode?.YesNode == lastNode)
     {
         lastNode.ParentNode.YesNode = aspect;
-        lastNode.IsResponseNode = false;
-        lastNode.IsEndNode = true; 
+    }
+    else if (lastNode.ParentNode is not null && lastNode.ParentNode.YesNode != lastNode)
+    {
+        lastNode.ParentNode.NoNode = aspect;
     }
 
     lastNode.ParentNode = aspect;
     aspect.NoNode = lastNode;
     deductedObject.ParentNode = aspect;
-    aspect.YesNode = deductedObject; 
+    aspect.YesNode = deductedObject;
 }
 
 MysteriousObject? FindFood(MysteriousObject food)
@@ -79,19 +77,19 @@ MysteriousObject? FindFood(MysteriousObject food)
 
     Console.WriteLine("1 - Sim\n" +
                       "2 - Não");
-    
+
     var result = Console.ReadLine() == "1";
 
     if (result && food.YesNode is not null)
-    { 
+    {
         return FindFood(food.YesNode);
     }
     else if (result && food.YesNode is null)
-    { 
+    {
         return food;
     }
     else if (!result && food.NoNode is not null)
-    { 
+    {
         return FindFood(food.NoNode);
     }
     else if (!result && food.NoNode is null)
