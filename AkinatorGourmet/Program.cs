@@ -1,22 +1,24 @@
 ﻿using AkinatorGourmet;
 
-var parentNode = new MysteriousObject
+var boloNode = new MysteriousObject
+{
+    Name = "Bolo de Chocolate",
+    IsEndNode = true
+};
+var lasanhaNode = new MysteriousObject
 {
     Name = "Lasanha",
+    IsResponseNode = true
 };
-
-var startNode = new MysteriousObject
+var massaNode = new MysteriousObject
 {
     Name = "Massa",
-    YesNode = parentNode
+    YesNode = lasanhaNode,
+    NoNode = boloNode,
 };
 
-var endNode = new MysteriousObject
-{
-    Name = "Bolo de Chocolate"
-};
-
-HashSet<MysteriousObject> mysteriousFood = [startNode, parentNode, endNode];
+lasanhaNode.ParentNode = massaNode;
+boloNode.ParentNode = massaNode;
 
 while (true)
 {
@@ -25,12 +27,7 @@ while (true)
 
     MysteriousObject? deductedObject = new();
 
-    deductedObject = FindFood(startNode);
-
-    if (deductedObject is null)
-    {
-        deductedObject = FindFood(endNode);
-    }
+    deductedObject = FindFood(massaNode);
 
     if (deductedObject is not null)
     {
@@ -38,22 +35,42 @@ while (true)
 
         Console.WriteLine($"Acertei! a comida que você pensou é {deductedObject.Name}");
     }
-    else
+}
+
+void UpdateTree(MysteriousObject lastNode)
+{
+    Console.Clear();
+
+    Console.WriteLine($"Desisto! Qual a foi a comida que você pensou?");
+
+    var thinkedFood = Console.ReadLine();
+
+    MysteriousObject deductedObject = new() { Name = thinkedFood, IsResponseNode = true };
+
+    Console.WriteLine($"O que a {thinkedFood} é, que {lastNode.Name} não é ?");
+
+    var unmappedAspect = Console.ReadLine();
+
+    MysteriousObject aspect = new()
     {
-        Console.Clear();
+        Name = unmappedAspect,
+        ParentNode = lastNode.ParentNode
+    };
 
-        Console.WriteLine($"Desisto! Qual a foi a comida que você pensou?");
+    if (lastNode.IsEndNode && lastNode.ParentNode is not null)
+        lastNode.ParentNode.NoNode = aspect;
 
-        var thinkedFood = Console.ReadLine();
-
-        Console.WriteLine($"O que a {thinkedFood} é, que {endNode.Name} não é ?");
-
-        var unmappedAspect = Console.ReadLine();
-
-        deductedObject = new() { Name = unmappedAspect, YesNode = new() { Name = thinkedFood } };
-
-        startNode.NoNode = deductedObject;
+    if (lastNode.IsResponseNode && lastNode.ParentNode is not null)
+    {
+        lastNode.ParentNode.YesNode = aspect;
+        lastNode.IsResponseNode = false;
+        lastNode.IsEndNode = true; 
     }
+
+    lastNode.ParentNode = aspect;
+    aspect.NoNode = lastNode;
+    deductedObject.ParentNode = aspect;
+    aspect.YesNode = deductedObject; 
 }
 
 MysteriousObject? FindFood(MysteriousObject food)
@@ -62,29 +79,35 @@ MysteriousObject? FindFood(MysteriousObject food)
 
     Console.WriteLine("1 - Sim\n" +
                       "2 - Não");
-
+    
     var result = Console.ReadLine() == "1";
 
     if (result && food.YesNode is not null)
-    {
-        //ACERTEI PARCIALMENTE, CONTINUO BUSCANDO
+    { 
         return FindFood(food.YesNode);
     }
     else if (result && food.YesNode is null)
-    {
-        // ACERTEI
+    { 
         return food;
     }
     else if (!result && food.NoNode is not null)
-    {
-        //NÃO É, MAS TENHO MAS OPÇÕES
+    { 
         return FindFood(food.NoNode);
     }
     else if (!result && food.NoNode is null)
     {
-        //NÃO É E NÃO TENHO MAIS OPÇÕES
+        UpdateTree(food);
         return null;
     }
 
     return null;
+}
+
+MysteriousObject GetLastNode(MysteriousObject node)
+{
+    return node.NoNode switch
+    {
+        null => node,
+        _ => GetLastNode(node.NoNode)
+    };
 }
